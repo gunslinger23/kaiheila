@@ -2,9 +2,6 @@ package kaiheila
 
 import (
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/json-iterator/go/extra"
-	"github.com/mitchellh/mapstructure"
 	"io"
 	"net/http"
 	"net/url"
@@ -12,6 +9,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/json-iterator/go/extra"
+	"github.com/mitchellh/mapstructure"
 )
 
 func (c *Client) request(method string, version int, path string, values url.Values, v interface{}) (err error) {

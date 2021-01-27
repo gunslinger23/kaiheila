@@ -2,10 +2,11 @@ package kaiheila
 
 import (
 	"compress/zlib"
-	"github.com/gorilla/websocket"
-	jsoniter "github.com/json-iterator/go"
 	"log"
 	"time"
+
+	"github.com/gorilla/websocket"
+	jsoniter "github.com/json-iterator/go"
 )
 
 const (
@@ -102,7 +103,7 @@ func (wss *WebSocketSession) receive() {
 				wss.lastPong = time.Now().Unix()
 			} else {
 				wss.status = status_init
-				log.Println("[kaiheila] hello: %v", msg.Data.GetError())
+				log.Println("[kaiheila] hello:", msg.Data.GetError())
 			}
 		case SIG_PONG:
 			wss.status = status_connected
