@@ -10,17 +10,22 @@ import (
 	"strings"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	"github.com/json-iterator/go/extra"
+
+	jsoniter "github.com/json-iterator/go"
 	"github.com/mitchellh/mapstructure"
 )
 
+func init() {
+	extra.RegisterFuzzyDecoders()
+}
+
 func (c *Client) request(method string, version int, path string, values interface{}, v interface{}) (err error) {
 	resp, err := c.do(method, version, path, struct2values(values))
-	url := resp.Request.URL.String()
 	if err != nil {
-		return fmt.Errorf("[kaiheila] %s > %s", url, err)
+		return fmt.Errorf("[kaiheila] %s > %s", path, err)
 	}
+	url := resp.Request.URL.String()
 	defer resp.Body.Close()
 
 	// Status check
@@ -30,7 +35,6 @@ func (c *Client) request(method string, version int, path string, values interfa
 
 	// Decode msg
 	msg := &httpMsg{}
-	extra.RegisterFuzzyDecoders()
 	err = jsoniter.NewDecoder(resp.Body).Decode(msg)
 	if err != nil {
 		return fmt.Errorf("[kaiheila] %s > %s", url, err)
@@ -39,7 +43,14 @@ func (c *Client) request(method string, version int, path string, values interfa
 		return fmt.Errorf("[kaiheila] %s > %d %s", url, msg.Code, msg.Message)
 	}
 	if v != nil {
-		err = mapstructure.Decode(msg.Data, v)
+		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+			TagName: "json",
+			Result:  v,
+		})
+		if err != nil {
+			return fmt.Errorf("[kaiheila] %s > %s", url, err)
+		}
+		err = decoder.Decode(msg.Data)
 		if err != nil {
 			return fmt.Errorf("[kaiheila] %s > %s", url, err)
 		}
@@ -48,18 +59,7 @@ func (c *Client) request(method string, version int, path string, values interfa
 }
 
 func (c *Client) do(method string, version int, path string, values url.Values) (resp *http.Response, err error) {
-	// Proxy
-	client := http.Client{Timeout: time.Second}
-	if len(c.HTTPProxy) > 0 {
-		proxy, err := url.Parse("http://" + c.HTTPProxy)
-		if err != nil {
-			return nil, err
-		}
-		client.Transport = &http.Transport{
-			Proxy: http.ProxyURL(proxy),
-		}
-	}
-
+	http.DefaultClient.Timeout = time.Duration(c.Timeout) * time.Second
 	// Build request
 	var req *http.Request
 	var body io.Reader
@@ -81,10 +81,14 @@ func (c *Client) do(method string, version int, path string, values url.Values) 
 		return
 	}
 
-	return client.Do(req)
+	// Do request
+	return http.DefaultClient.Do(req)
 }
 
 func struct2values(v interface{}) (values url.Values) {
+	if v == nil {
+		return nil
+	}
 	values = url.Values{}
 	iVal := reflect.ValueOf(v).Elem()
 	typ := iVal.Type()

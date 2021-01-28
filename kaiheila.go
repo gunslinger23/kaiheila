@@ -16,8 +16,6 @@ type Client struct {
 	TokenType string
 	// API request timeout (sec)
 	Timeout int
-	// Proxy
-	HTTPProxy string
 }
 
 // NewClient create a new client for access

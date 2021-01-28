@@ -15,8 +15,8 @@ const (
 	statusConnected
 	statusRetry
 	statusClose
-	timeout = 6 * time.Second
-	clock   = 100 * time.Millisecond
+	timeout = 6 * time.Second        // Timeout of connection
+	clock   = 100 * time.Millisecond // Session status check clock
 )
 
 // HandlerFunc handle event from server
@@ -24,7 +24,7 @@ type HandlerFunc func(event EventMsg)
 
 // WebSocketSession a websocket session
 type WebSocketSession struct {
-	conn *websocket.Conn
+	wsCloser func() error
 
 	api     *Client
 	handler HandlerFunc
@@ -48,10 +48,13 @@ func (wss *WebSocketSession) run() {
 	for {
 		switch wss.status {
 		case statusInit:
-			if wss.conn != nil {
-				wss.conn.Close()
+			if wss.wsCloser != nil {
+				wss.wsCloser()
 			}
-			wss.connect()
+			// keep trying...
+			for !wss.connect() && wss.status == statusInit {
+				time.Sleep(timeout)
+			}
 		case statusClose:
 			return
 		}
@@ -59,27 +62,34 @@ func (wss *WebSocketSession) run() {
 	}
 }
 
-func (wss *WebSocketSession) connect() {
+func (wss *WebSocketSession) connect() bool {
 	gateway, err := wss.api.GetGateway()
 	if err != nil {
 		log.Println("[kaiheila] gateway:", err)
-		return
+		return false
 	}
-	wss.conn, _, err = websocket.DefaultDialer.Dial(gateway, nil)
+	conn, _, err := websocket.DefaultDialer.Dial(gateway, nil)
 	if err != nil {
 		log.Println("[kaiheila] dial:", err)
-		return
+		return false
 	}
 
+	wss.wsCloser = conn.Close
 	wss.status = statusConnecting
-	go wss.receive()
-	go wss.ping()
+
+	go wss.receive(conn)
+	go wss.healthChecker(conn)
+	return true
 }
 
-func (wss *WebSocketSession) receive() {
+func (wss *WebSocketSession) receive(conn *websocket.Conn) {
+	defer func() {
+		wss.status = statusInit
+	}()
+
 	for {
 		msg := &websocketMsg{}
-		_, r, err := wss.conn.NextReader()
+		_, r, err := conn.NextReader()
 		if err != nil {
 			log.Println("[kaiheila] read:", err)
 			return
@@ -103,35 +113,46 @@ func (wss *WebSocketSession) receive() {
 		case signalHello:
 			if msg.Data.Code == 0 {
 				wss.status = statusConnected
-				wss.lastPong = time.Now().Unix()
 			} else {
-				wss.status = statusInit
 				log.Println("[kaiheila] hello:", msg.Data.GetError())
+				return
 			}
 		case signalPong:
 			wss.status = statusConnected
 			wss.lastPong = time.Now().Unix()
 		case signalReconnect:
-			wss.status = statusInit
-		case signalResumeACK:
-			wss.status = statusConnected
+			return
 		}
-
-		time.Sleep(clock)
 	}
 }
 
-func (wss *WebSocketSession) ping() {
+func (wss *WebSocketSession) healthChecker(conn *websocket.Conn) {
+	defer func() {
+		wss.status = statusInit
+	}()
+
+	// Check hello
+	time.Sleep(timeout)
+	if wss.status != statusConnected {
+		return
+	}
+
+	// Check ping pong
 	for {
-		time.Sleep(5 * timeout)
+		err := conn.WriteJSON(&websocketMsg{
+			Signal: signalPing,
+			SN:     wss.sn,
+		})
+		if err != nil {
+			log.Println("[kaiheila] ping:", err)
+			return
+		}
+
+		time.Sleep(timeout)
 
 		// Check timeout
 		switch wss.status {
-		case statusInit:
-			return
-		case statusConnecting:
-			wss.status = statusInit
-			log.Println("[kaiheila] no hello")
+		case statusInit, statusClose, statusConnecting:
 			return
 		case statusConnected:
 			if wss.timeout() {
@@ -140,30 +161,22 @@ func (wss *WebSocketSession) ping() {
 			}
 		case statusRetry:
 			if wss.timeout() {
-				wss.status = statusInit
 				log.Println("[kaiheila] ping retry 2")
 				return
 			}
-		case statusClose:
-			return
 		}
 
-		err := wss.conn.WriteJSON(&websocketMsg{
-			Signal: signalPing,
-			SN:     wss.sn,
-		})
-		if err != nil {
-			log.Println("[kaiheila] ping:", err)
-		}
+		// sleep for next ping
+		time.Sleep(5 * timeout)
 	}
 }
 
 func (wss *WebSocketSession) timeout() bool {
-	return wss.lastPong < time.Now().Add(-5*timeout).Unix()
+	return wss.lastPong < time.Now().Add(-timeout).Unix()
 }
 
 // Close close this seesion
 func (wss *WebSocketSession) Close() {
-	wss.conn.Close()
+	wss.wsCloser()
 	wss.status = statusClose
 }

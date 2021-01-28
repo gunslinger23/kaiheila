@@ -19,7 +19,7 @@ type SendMessageResp struct {
 
 // SendChannelMsg Send a message to channel
 func (c *Client) SendChannelMsg(req SendMessageReq) (SendMessageResp, error) {
-	resp := &SendMessageResp{}
-	err := c.request("POST", 3, "channel/message", &req, resp)
-	return *resp, err
+	resp := SendMessageResp{}
+	err := c.request("POST", 3, "channel/message", &req, &resp)
+	return resp, err
 }
