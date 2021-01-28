@@ -1,38 +1,36 @@
 package kaiheila
 
 const (
-	apiUrlDefault  = "https://www.kaiheila.cn/api"
+	apiURLDefault  = "https://www.kaiheila.cn/api"
 	timeoutDefault = 1
-	TokenBot       = "Bot"
-	TokenOauth2    = "Bearer"
+	// TokenBot Type: bot
+	TokenBot = "Bot"
+	// TokenOAuth2 Type: OAuth2
+	TokenOAuth2 = "Bearer"
 )
 
+// Client sdk client
 type Client struct {
-	Url       string
+	URL       string
 	Token     string
 	TokenType string
 	// API request timeout (sec)
 	Timeout int
 	// Proxy
-	HttpProxy string
+	HTTPProxy string
 }
 
-type APIRequest struct {
-	Version int
-	Method  string
-	Path    string
-}
-
+// NewClient create a new client for access
 func NewClient(url, tokenType, token string, timeout int) *Client {
 	if len(url) == 0 {
-		url = apiUrlDefault
+		url = apiURLDefault
 	}
 	if timeout == 0 {
 		timeout = timeoutDefault
 	}
 
 	return &Client{
-		Url:       url,
+		URL:       url,
 		Token:     token,
 		TokenType: tokenType,
 		Timeout:   timeout,

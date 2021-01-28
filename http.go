@@ -48,8 +48,8 @@ func (c *Client) request(method string, version int, path string, values url.Val
 func (c *Client) do(method string, version int, path string, values url.Values) (resp *http.Response, err error) {
 	// Proxy
 	client := http.Client{Timeout: time.Second}
-	if len(c.HttpProxy) > 0 {
-		proxy, err := url.Parse("http://" + c.HttpProxy)
+	if len(c.HTTPProxy) > 0 {
+		proxy, err := url.Parse("http://" + c.HTTPProxy)
 		if err != nil {
 			return nil, err
 		}
@@ -62,7 +62,7 @@ func (c *Client) do(method string, version int, path string, values url.Values) 
 	var req *http.Request
 	var body io.Reader
 	var header = http.Header{}
-	url := c.Url + "/v" + strconv.Itoa(version) + "/" + path
+	url := c.URL + "/v" + strconv.Itoa(version) + "/" + path
 	if values != nil {
 		switch method {
 		case "GET":

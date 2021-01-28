@@ -1,5 +1,6 @@
 package kaiheila
 
+// SendMessageReq message request struct
 type SendMessageReq struct {
 	Type         int    `json:"type,omitempty"`           // (Optional) A message type to send
 	ChannelID    string `json:"channel_id"`               // Send to which channel?
@@ -9,6 +10,7 @@ type SendMessageReq struct {
 	TempTargetID string `json:"temp_target_id,omitempty"` // (Optional) User id, the message will not store in server
 }
 
+// SendMessageResp message respone struct
 type SendMessageResp struct {
 	MsgID        string `json:"msg_id"`
 	MsgTimestamp int64  `json:"msg_timestamp"`

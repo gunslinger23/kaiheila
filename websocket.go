@@ -10,17 +10,19 @@ import (
 )
 
 const (
-	status_init = iota
-	status_connecting
-	status_connected
-	status_retry
-	status_close
+	statusInit = iota
+	statusConnecting
+	statusConnected
+	statusRetry
+	statusClose
 	timeout = 6 * time.Second
 	clock   = 100 * time.Millisecond
 )
 
+// HandlerFunc handle event from server
 type HandlerFunc func(event EventMsg)
 
+// WebSocketSession a websocket session
 type WebSocketSession struct {
 	conn *websocket.Conn
 
@@ -32,6 +34,7 @@ type WebSocketSession struct {
 	lastPong int64
 }
 
+// WebSocketSession Create a websocket session for handle event from server
 func (c *Client) WebSocketSession(handler HandlerFunc) *WebSocketSession {
 	wss := &WebSocketSession{
 		api:     c,
@@ -44,12 +47,12 @@ func (c *Client) WebSocketSession(handler HandlerFunc) *WebSocketSession {
 func (wss *WebSocketSession) run() {
 	for {
 		switch wss.status {
-		case status_init:
+		case statusInit:
 			if wss.conn != nil {
 				wss.conn.Close()
 			}
 			wss.connect()
-		case status_close:
+		case statusClose:
 			return
 		}
 		time.Sleep(clock)
@@ -68,7 +71,7 @@ func (wss *WebSocketSession) connect() {
 		return
 	}
 
-	wss.status = status_connecting
+	wss.status = statusConnecting
 	go wss.receive()
 	go wss.ping()
 }
@@ -92,26 +95,26 @@ func (wss *WebSocketSession) receive() {
 
 		// signal
 		switch msg.Signal {
-		case SIG_EVENT:
-			if wss.status == status_connected {
+		case signalEvent:
+			if wss.status == statusConnected {
 				wss.handler(msg.Data)
 				wss.sn = msg.SN
 			}
-		case SIG_HELLO:
+		case signalHello:
 			if msg.Data.Code == 0 {
-				wss.status = status_connected
+				wss.status = statusConnected
 				wss.lastPong = time.Now().Unix()
 			} else {
-				wss.status = status_init
+				wss.status = statusInit
 				log.Println("[kaiheila] hello:", msg.Data.GetError())
 			}
-		case SIG_PONG:
-			wss.status = status_connected
+		case signalPong:
+			wss.status = statusConnected
 			wss.lastPong = time.Now().Unix()
-		case SIG_RECONNECT:
-			wss.status = status_init
-		case SIG_RESUME_ACK:
-			wss.status = status_connected
+		case signalReconnect:
+			wss.status = statusInit
+		case signalResumeACK:
+			wss.status = statusConnected
 		}
 
 		time.Sleep(clock)
@@ -124,29 +127,29 @@ func (wss *WebSocketSession) ping() {
 
 		// Check timeout
 		switch wss.status {
-		case status_init:
+		case statusInit:
 			return
-		case status_connecting:
-			wss.status = status_init
+		case statusConnecting:
+			wss.status = statusInit
 			log.Println("[kaiheila] no hello")
 			return
-		case status_connected:
+		case statusConnected:
 			if wss.timeout() {
-				wss.status = status_retry
+				wss.status = statusRetry
 				log.Println("[kaiheila] ping retry 1")
 			}
-		case status_retry:
+		case statusRetry:
 			if wss.timeout() {
-				wss.status = status_init
+				wss.status = statusInit
 				log.Println("[kaiheila] ping retry 2")
 				return
 			}
-		case status_close:
+		case statusClose:
 			return
 		}
 
 		err := wss.conn.WriteJSON(&websocketMsg{
-			Signal: SIG_PING,
+			Signal: signalPing,
 			SN:     wss.sn,
 		})
 		if err != nil {
@@ -159,7 +162,8 @@ func (wss *WebSocketSession) timeout() bool {
 	return wss.lastPong < time.Now().Add(-5*timeout).Unix()
 }
 
+// Close close this seesion
 func (wss *WebSocketSession) Close() {
 	wss.conn.Close()
-	wss.status = status_close
+	wss.status = statusClose
 }

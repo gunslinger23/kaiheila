@@ -3,13 +3,13 @@ package kaiheila
 import "fmt"
 
 const (
-	SIG_EVENT = iota
-	SIG_HELLO
-	SIG_PING
-	SIG_PONG
-	SIG_RESUME
-	SIG_RECONNECT
-	SIG_RESUME_ACK
+	signalEvent = iota
+	signalHello
+	signalPing
+	signalPong
+	signalResume
+	signalReconnect
+	signalResumeACK
 )
 
 type websocketMsg struct {
@@ -24,24 +24,35 @@ type httpMsg struct {
 	Data    map[string]interface{} `json:"data"`
 }
 
+// MsgType message type
 type MsgType int
 
 const (
-	MsgTypeText      = MsgType(1)
-	MsgTypeImg       = MsgType(2)
-	MsgTypeVideo     = MsgType(3)
-	MsgTypeFile      = MsgType(4)
-	MsgTypeVoice     = MsgType(8)
+	// MsgTypeText Type: Text
+	MsgTypeText = MsgType(1)
+	// MsgTypeImg Type: Image
+	MsgTypeImg = MsgType(2)
+	// MsgTypeVideo Type: Video
+	MsgTypeVideo = MsgType(3)
+	// MsgTypeFile Type: File
+	MsgTypeFile = MsgType(4)
+	// MsgTypeVoice Type: Voice
+	MsgTypeVoice = MsgType(8)
+	// MsgTypeKmarkdown Type: Kmarkdown
 	MsgTypeKmarkdown = MsgType(9)
-	MsgTypeSystem    = MsgType(255)
+	// MsgTypeSystem Type: System
+	MsgTypeSystem = MsgType(255)
 )
 
+// ChannelType Channel type
 type ChannelType string
 
 const (
+	// ChannelGroup Type: Channel
 	ChannelGroup = ChannelType("GROUP")
 )
 
+// EventMsg Event message from server
 type EventMsg struct {
 	// Signal
 	Code      int    `json:"code"`
@@ -59,6 +70,7 @@ type EventMsg struct {
 	Extra        ExtraMsg    `json:"extra"`
 }
 
+// ExtraMsg extra info of message
 type ExtraMsg struct {
 	Type         MsgType   `json:"type"`
 	GuildID      string    `json:"guild_id"`
@@ -70,6 +82,7 @@ type ExtraMsg struct {
 	Author       AuthorMsg `json:"author"`
 }
 
+// AuthorMsg Author info of message
 type AuthorMsg struct {
 	ID          string   `json:"id"`
 	Username    string   `json:"username"`
@@ -81,6 +94,7 @@ type AuthorMsg struct {
 	Bot         bool     `json:"bot"`
 }
 
+// GetError Get error from message
 func (msg EventMsg) GetError() error {
 	switch msg.Code {
 	case 40100:

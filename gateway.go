@@ -1,11 +1,12 @@
 package kaiheila
 
-type gateway struct {
-	Url string
+type gatewayResp struct {
+	URL string
 }
 
+// GetGateway get websocket url from gateway
 func (c *Client) GetGateway() (string, error) {
-	gateway := gateway{}
+	gateway := gatewayResp{}
 	err := c.request("GET", 3, "gateway/index", nil, &gateway)
-	return gateway.Url, err
+	return gateway.URL, err
 }
