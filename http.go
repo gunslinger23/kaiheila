@@ -15,8 +15,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-func (c *Client) request(method string, version int, path string, values url.Values, v interface{}) (err error) {
-	resp, err := c.do(method, version, path, values)
+func (c *Client) request(method string, version int, path string, values interface{}, v interface{}) (err error) {
+	resp, err := c.do(method, version, path, struct2values(values))
 	url := resp.Request.URL.String()
 	if err != nil {
 		return fmt.Errorf("[kaiheila] %s > %s", url, err)
@@ -38,9 +38,11 @@ func (c *Client) request(method string, version int, path string, values url.Val
 	if msg.Code != 0 {
 		return fmt.Errorf("[kaiheila] %s > %d %s", url, msg.Code, msg.Message)
 	}
-	err = mapstructure.Decode(msg.Data, v)
-	if err != nil {
-		return fmt.Errorf("[kaiheila] %s > %s", url, err)
+	if v != nil {
+		err = mapstructure.Decode(msg.Data, v)
+		if err != nil {
+			return fmt.Errorf("[kaiheila] %s > %s", url, err)
+		}
 	}
 	return nil
 }

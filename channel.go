@@ -1,6 +1,6 @@
 package kaiheila
 
-// SendMessageReq message request struct
+// SendMessageReq Message request struct
 type SendMessageReq struct {
 	Type         int    `json:"type,omitempty"`           // (Optional) A message type to send
 	ChannelID    string `json:"channel_id"`               // Send to which channel?
@@ -10,7 +10,7 @@ type SendMessageReq struct {
 	TempTargetID string `json:"temp_target_id,omitempty"` // (Optional) User id, the message will not store in server
 }
 
-// SendMessageResp message respone struct
+// SendMessageResp Message respone struct
 type SendMessageResp struct {
 	MsgID        string `json:"msg_id"`        // ID of message sent
 	MsgTimestamp int64  `json:"msg_timestamp"` // Timestamp of message sent
@@ -20,6 +20,6 @@ type SendMessageResp struct {
 // SendChannelMsg Send a message to channel
 func (c *Client) SendChannelMsg(req SendMessageReq) (SendMessageResp, error) {
 	resp := &SendMessageResp{}
-	err := c.request("POST", 3, "channel/message", struct2values(&req), resp)
+	err := c.request("POST", 3, "channel/message", &req, resp)
 	return *resp, err
 }
