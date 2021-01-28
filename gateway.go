@@ -4,9 +4,9 @@ type gatewayResp struct {
 	URL string
 }
 
-// GetGateway get websocket url from gateway
-func (c *Client) GetGateway() (string, error) {
+// GetGateway Get websocket url from gateway
+func (c *Client) GetGateway() (url string, err error) {
 	gateway := gatewayResp{}
-	err := c.request("GET", 3, "gateway/index", nil, &gateway)
+	err = c.request("GET", 3, "gateway/index", nil, &gateway)
 	return gateway.URL, err
 }

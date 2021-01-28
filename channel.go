@@ -12,9 +12,9 @@ type SendMessageReq struct {
 
 // SendMessageResp message respone struct
 type SendMessageResp struct {
-	MsgID        string `json:"msg_id"`
-	MsgTimestamp int64  `json:"msg_timestamp"`
-	Nonce        string `json:"nonce"`
+	MsgID        string `json:"msg_id"`        // ID of message sent
+	MsgTimestamp int64  `json:"msg_timestamp"` // Timestamp of message sent
+	Nonce        string `json:"nonce"`         // Server do not process message
 }
 
 // SendChannelMsg Send a message to channel
