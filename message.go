@@ -40,6 +40,8 @@ const (
 	MsgTypeVoice = MsgType(8)
 	// MsgTypeKmarkdown Type: Kmarkdown
 	MsgTypeKmarkdown = MsgType(9)
+	// MsgTypeCard Type: Card
+	MsgTypeCard = MsgType(10)
 	// MsgTypeSystem Type: System
 	MsgTypeSystem = MsgType(255)
 )
