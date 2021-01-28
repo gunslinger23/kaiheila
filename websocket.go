@@ -177,6 +177,8 @@ func (wss *WebSocketSession) timeout() bool {
 
 // Close close this seesion
 func (wss *WebSocketSession) Close() {
-	wss.wsCloser()
+	if wss.wsCloser != nil {
+		wss.wsCloser()
+	}
 	wss.status = statusClose
 }
