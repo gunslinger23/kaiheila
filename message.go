@@ -50,8 +50,8 @@ const (
 type ChannelType string
 
 const (
-	// ChannelGroup Type: Channel
 	ChannelGroup = ChannelType("GROUP")
+	ChannelPerson = ChannelType("PERSON")
 )
 
 // EventMsg Event message from server
@@ -72,16 +72,60 @@ type EventMsg struct {
 	Extra        ExtraMsg    `json:"extra"`
 }
 
+// ExtraType Not system extra type
+type ExtraType string
+
+const (
+	ExtraAddedReaction = ExtraType("added_reaction")
+	ExtraDeletedReaction = ExtraType("deleted_reaction")
+	ExtraUpdateMessage = ExtraType("updated_message")
+	ExtraDeletedMessage = ExtraType("deleted_message")
+	ExtraAddedChannel = ExtraType("added_channel")
+	ExtraUpdatedChannel = ExtraType("updated_channel")
+	ExtraDeletedChannel = ExtraType("deleted_channel")
+	ExtraPinnedMessage = ExtraType("pinned_message")
+	ExtraUnpinnedMessage = ExtraType("unpinned_message")
+	ExtraUpdatePrivateMessage = ExtraType("updated_private_message")
+	ExtraDeletedPrivateMessage = ExtraType("deleted_private_message")
+	ExtraPrivateAddedReaction = ExtraType("private_added_reaction")
+	ExtraPrivateDeletedReaction = ExtraType("private_deleted_reaction")
+	ExtraJoinedGuild = ExtraType("joined_guild")
+	ExtraExitedGuild = ExtraType("exited_guild")
+	ExtraUpdateGuildMember = ExtraType("updated_guild_member")
+	ExtraGuildMemberOnline = ExtraType("guild_member_online")
+	ExtraGuildMemberOffline = ExtraType("guild_member_offline")
+	ExtraAddedRole = ExtraType("added_role")
+	ExtraDeletedRole = ExtraType("deleted_role")
+	ExtraUpdatedRole = ExtraType("updated_role")
+	ExtraUpdatedGuild = ExtraType("updated_guild")
+	ExtraDeletedGuild = ExtraType("deleted_guild")
+	ExtraAddedBlockList = ExtraType("added_block_list")
+	ExtraDeletedBlockList = ExtraType("deleted_block_list")
+	ExtraJoinedChannel = ExtraType("joined_channel")
+	ExtraExitedChannel = ExtraType("exited_channel")
+	ExtraUserUpdated = ExtraType("user_updated")
+	ExtraSelfJoinedGuild = ExtraType("self_joined_guild")
+	ExtraSelfExitedGuild = ExtraType("self_exited_guild")
+	ExtraMessageButtonClick = ExtraType("message_btn_click")
+)
+
+// Is check extra type match
+func (t ExtraType) Is(et interface{}) bool {
+	res, _ := et.(ExtraType)
+	return res == t
+}
+
 // ExtraMsg extra info of message
 type ExtraMsg struct {
-	Type         MsgType   `json:"type"`
-	GuildID      string    `json:"guild_id"`
-	ChannelName  string    `json:"channel_name"`
-	Mention      []string  `json:"mention"`
-	MentionAll   bool      `json:"mention_all"`
-	MentionRoles []string  `json:"mention_roles"`
-	MentionHere  bool      `json:"mention_here"`
-	Author       AuthorMsg `json:"author"`
+	Type         interface{}            `json:"type"`
+	Body         map[string]interface{} `json:"body"`
+	GuildID      string                 `json:"guild_id"`
+	ChannelName  string                 `json:"channel_name"`
+	Mention      []string               `json:"mention"`
+	MentionAll   bool                   `json:"mention_all"`
+	MentionRoles []string               `json:"mention_roles"`
+	MentionHere  bool                   `json:"mention_here"`
+	Author       AuthorMsg              `json:"author"`
 }
 
 // AuthorMsg Author info of message
