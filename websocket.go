@@ -2,11 +2,11 @@ package kaiheila
 
 import (
 	"compress/zlib"
+	"encoding/json"
 	"log"
 	"time"
 
 	"github.com/gorilla/websocket"
-	jsoniter "github.com/json-iterator/go"
 )
 
 const (
@@ -98,7 +98,7 @@ func (wss *WebSocketSession) receive(conn *websocket.Conn) {
 		if err != nil {
 			log.Println("[kaiheila] zlib:", err)
 		}
-		err = jsoniter.NewDecoder(raw).Decode(msg)
+		err = json.NewDecoder(raw).Decode(msg)
 		if err != nil {
 			log.Println("[kaiheila] json:", err)
 		}

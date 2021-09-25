@@ -1,6 +1,7 @@
 package kaiheila
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,16 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/json-iterator/go/extra"
-
-	jsoniter "github.com/json-iterator/go"
-	"github.com/mitchellh/mapstructure"
 )
-
-func init() {
-	extra.RegisterFuzzyDecoders()
-}
 
 func (c *Client) request(method string, version int, path string, values interface{}, v interface{}) (err error) {
 	resp, err := c.do(method, version, path, struct2values(values))
@@ -35,7 +27,7 @@ func (c *Client) request(method string, version int, path string, values interfa
 
 	// Decode msg
 	msg := &httpMsg{}
-	err = jsoniter.NewDecoder(resp.Body).Decode(msg)
+	err = json.NewDecoder(resp.Body).Decode(msg)
 	if err != nil {
 		return fmt.Errorf("[kaiheila] %s > %s", url, err)
 	}
@@ -43,14 +35,7 @@ func (c *Client) request(method string, version int, path string, values interfa
 		return fmt.Errorf("[kaiheila] %s > %d %s", url, msg.Code, msg.Message)
 	}
 	if v != nil {
-		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-			TagName: "json",
-			Result:  v,
-		})
-		if err != nil {
-			return fmt.Errorf("[kaiheila] %s > %s", url, err)
-		}
-		err = decoder.Decode(msg.Data)
+		err = json.Unmarshal(msg.Data, v)
 		if err != nil {
 			return fmt.Errorf("[kaiheila] %s > %s", url, err)
 		}

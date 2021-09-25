@@ -1,9 +1,8 @@
 package kaiheila
 
 import (
+	"encoding/json"
 	"fmt"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 const (
@@ -23,9 +22,9 @@ type websocketMsg struct {
 }
 
 type httpMsg struct {
-	Code    int                    `json:"code"`
-	Message string                 `json:"message"`
-	Data    map[string]interface{} `json:"data"`
+	Code    int             `json:"code"`
+	Message string          `json:"message"`
+	Data    json.RawMessage `json:"data"`
 }
 
 // MsgType message type
@@ -113,35 +112,29 @@ const (
 	ExtraMessageButtonClick     = ExtraType("message_btn_click")
 )
 
-// ExtraMsgType type of extra message for non-system message
-type ExtraMsgType jsoniter.RawMessage
-
-// Is match type of non-system message
-func (t ExtraMsgType) Is(et ExtraType) bool {
-	var res string
-	_ = jsoniter.Unmarshal(t, &res)
-	return res == string(t)
-}
-
-// ExtraMsgBody body of extra message
-type ExtraMsgBody jsoniter.RawMessage
-
-// Get get body of extra message
-func (b ExtraMsgBody) Get(dest interface{}) error {
-	return jsoniter.Unmarshal(b, dest)
-}
-
 // ExtraMsg extra info of message
 type ExtraMsg struct {
-	Type         ExtraMsgType `json:"type"`
-	Body         ExtraMsgBody `json:"body"`
-	GuildID      string       `json:"guild_id"`
-	ChannelName  string       `json:"channel_name"`
-	Mention      []string     `json:"mention"`
-	MentionAll   bool         `json:"mention_all"`
-	MentionRoles []string     `json:"mention_roles"`
-	MentionHere  bool         `json:"mention_here"`
-	Author       AuthorMsg    `json:"author"`
+	Type         json.RawMessage `json:"type"`
+	Body         json.RawMessage `json:"body"`
+	GuildID      string          `json:"guild_id"`
+	ChannelName  string          `json:"channel_name"`
+	Mention      []string        `json:"mention"`
+	MentionAll   bool            `json:"mention_all"`
+	MentionRoles []string        `json:"mention_roles"`
+	MentionHere  bool            `json:"mention_here"`
+	Author       AuthorMsg       `json:"author"`
+}
+
+// Is match type of non-system message
+func (msg ExtraMsg) Is(et ExtraType) bool {
+	var res string
+	_ = json.Unmarshal(msg.Type, &res)
+	return res == string(et)
+}
+
+// GetBody get body of extra message
+func (msg ExtraMsg) GetBody(dest interface{}) error {
+	return json.Unmarshal(msg.Body, dest)
 }
 
 // AuthorMsg Author info of message
