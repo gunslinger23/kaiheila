@@ -167,7 +167,7 @@ func (wss *WebSocketSession) healthChecker(conn *websocket.Conn) {
 		}
 
 		// sleep for next ping
-		time.Sleep(5 * timeout)
+		time.Sleep(4 * timeout)
 	}
 }
 
