@@ -18,7 +18,7 @@ client.WebSocketSession(func(event EventMsg) {
     if event.Extra.Type.Is(ExtraGuildMemberOnline) {
         fmt.Println(event.Extra.Body["user_id"], "is online!")
     }
-    if event.Extra.Type.Is(guild_member_offline) {
+    if event.Extra.Type.Is(ExtraGuildMemberOffline) {
         fmt.Println(event.Extra.Body["user_id"], "is offline!")
     }
 })
